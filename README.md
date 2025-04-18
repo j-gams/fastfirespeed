@@ -1,4 +1,4 @@
-# pyfirespread - Algorithm Explained
+# fastfirespeed - Algorithm Explained
 ### Intro
 We want to determine the maximum speed of a fire between two timesteps, t1 and t2. The fire perimeters are represented by multipolygons (sets of polygons). Let the perimeter at t1 be P1 and the perimeter at t2 be P2. One intuitive metric for the distance travelled by the fire is the maximum distance between P1 and P2. Simply, for each vertex in P2, we want to pair it with the nearest point in P1; then we want to find the longest of all these pairs. This concept is illustrated in the example below, taken from two timesteps of the East Troublesome Fire. The blue line shows the longest of these paths between the earlier timestep (darker) and the later timestep (lighter):
 
