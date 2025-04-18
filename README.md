@@ -64,5 +64,5 @@ The meat of the algorithm: to compute longest distances efficiently over these c
 
 Instead of iterating over these points directly we iterate over the bins occupied by second-timestep points. A nearby occupied first-timestep bin should therefore contain the nearest point, thus dramatically reducing the number of comparisons that need to be made between first- and second-timestep points.
 
-![figure2](figs/binning_example.png "figure 2" =20%x) ![image](figs/ringmethod_example.png "figure 3" =20%x)
+![figure2](figs/binning_example.png){: style="height:83px"} ![image](figs/ringmethod_example.png){: style="height:83px"}
 
