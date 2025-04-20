@@ -30,7 +30,7 @@ Iterate over outer_polygon in outer_multipolygon
             initialize ring = 0
             initialize unfound_flag = T
             while ring < max_ring
-                compute list of occupied bins with l1-distance at most ring
+                compute list of occupied bins with linf-distance at most ring
                 if list is not empty and unfound_flag is T
                         verify validity of combinations
                         set max_ring to ceil(sqrt(2)*ring) + slop
@@ -53,16 +53,31 @@ return the distance and longest vector
 ```
 
 ------------
-### Description
+## Description
 
 What is going on in the algorithm above? \
 First, we need to iterate over all the polygons in the second timestep perimeter. We need to determine if they are spot fires (they do not overlap with the fire at the previous timestep). This will determine which polygons in the previous timestep we need to compare to. The algorithm finds the maximum distance over all desired pairs.
 
 Second, we need to iterate over all the polygons in the first timestep perimeter. The algorithm finds the minimum distance computed over earlier timesteps with a fixed later timestep. Intuitively, the fire probably spread to place B from the nearest place A, but we want to find the longest of those A-B distances.
 
+### Binned Nearest Neighbors
+
 The meat of the algorithm: to compute longest distances efficiently over these combinations of polygons, we bin points on the perimeter, with a consistent grid between the first and second timestep. Again, we want to find the second-timestep point q with the maximum mininum distance to any first-timestep point p. 
 
-Instead of iterating over these points directly we iterate over the bins occupied by second-timestep points. A nearby occupied first-timestep bin should therefore contain the nearest point, thus dramatically reducing the number of comparisons that need to be made between first- and second-timestep points.
+![figure2](figs/binning_example.png) 
 
-![figure2](figs/binning_example.png){: style="height:83px"} ![image](figs/ringmethod_example.png){: style="height:83px"}
+Instead of directly comparing all points in the second timestep to all points in the first, we iterate over all occupied second-timestep bins $B_i$. The closest point $p$ to any $q_j \in B_i $ will naturally be in a nearby occupied bin $A_h$. 
 
+To find nearest pairs to points in a fixed $B_i$, the algorithm works outward in rings of bins: first the 0th bin (the first-timestep bin in the same location), then the 1st ring bins with an L-inf distance of 1 from the initial bin, and so on. This is illustrated below, with the 0th bin in green, the 1st ring bins in light blue, and the 2nd-ring bins in darker blue. This system is easily implemented with array slicing. 
+
+If an occupied bin $A_h$ is found in ring 2, the distance between $q$ and $p \in A_h$ could be between $1$ and $3\sqrt2$ bin widths. Generally, a point found is found in ring r, the distance to q will be between $r-1$ and $(r+1)\sqrt2$ bin widths. Therefore, if the first occupied bin is found in ring r, then a closer p may be found up to the $ \lceil (r+2) \sqrt2 \rceil + s$. Here, s is an integer "slop" parameter, explained below.
+
+
+![image](figs/ringmethod_example.png)
+
+All elements $q_j \in B_i$ are then compared to all $p_k \in A_h$ for all $A_h$ with L-inf distance less than $ \lceil (r+2) \sqrt2 \rceil $. The shortest of these distances is saved for $q_j \in B_i$. The longest of these shortest-pairs is computed for each bin, and the longest overall pair is computed over all bins.
+
+### Terrain Distance
+To this point, distances between vertices have been discussed as though in 2d Euclidean space, but in actuality there is terrain between points. We compute distance over terrain by estimating the arc length over the terrain. Given a raster file and a step length, the algorithm samples along the vector from p to q and then computes distances from the sampling step length and the difference in elevation.
+
+This presents a challenge for the binned nearest neighbors algorithm, since the terrain distance between points is no longer only a function of the start and end coordinates. This is accounted for by the addition of the slop distance s, to be determined by the user, to capture points further away by euclidean distance but (potentially) closer by terrain distance.
