@@ -1,4 +1,5 @@
 # fastfirespeed - Algorithm Explained
+
 ### Intro
 We want to determine the maximum speed of a fire between two timesteps, t1 and t2. The fire perimeters are represented by multipolygons (sets of polygons). Let the perimeter at t1 be P1 and the perimeter at t2 be P2. One intuitive metric for the distance travelled by the fire is the maximum distance between P1 and P2. Simply, for each vertex in P2, we want to pair it with the nearest point in P1; then we want to find the longest of all these pairs. This concept is illustrated in the example below, taken from two timesteps of the East Troublesome Fire. The blue line shows the longest of these paths between the earlier timestep (darker) and the later timestep (lighter):
 
@@ -6,9 +7,7 @@ We want to determine the maximum speed of a fire between two timesteps, t1 and t
 
 The naive way to compute this is to iterate over the outer polygon and then over the inner polygon, making O(n * m) comparisons for n points in P1 and m points in P2. This gets very expensive when working with big perimeters and many timesteps. We present a binning method to dramatically reduce the cost per step of computing these maximum spread vectors.
 
-
-------------
-## Description
+### High Level
 
 What is going on in this algorithm? \
 First, we need to iterate over all the polygons in the second timestep perimeter. We need to determine if they are spot fires (they do not overlap with the fire at the previous timestep). This will determine which polygons in the previous timestep we need to compare to. The algorithm finds the maximum distance over all desired pairs.
@@ -34,6 +33,19 @@ All elements $q_j \in B_i$ are then compared to all $p_k \in A_h$ for all $A_h$ 
 On the East Troublesome Fire test case, this strategy dramatically reduces the computational cost per time step. The naive kNN method ("simplified") is compared to the binned method in the figure below. The cost of the binned method is a function of the number of the number of bins, number of points per bin, and ultimate ring size for each bin.
 
 ![performance](figs/timecost_example.png)
+
+### Usage
+firespeed.ipynb contains the binned nearest neighbors function, several helper functions, and some other work. \ 
+
+| Function | Description |
+| ----------- | --------|
+| nn_binned()         | main function for computing the longest pair for 1 timestep (between 2 perims)
+| nn_firespeed()      | wrapper function to perform computations over multiple timesteps |
+| resample_perim()    | helper to resample geometry, needed to remove duplicate or near-duplicate points |
+| readraster()        | helper to read raster required for terrain distance |
+| dist()              | helper to compute euclidean distance between 2 points |
+| terraindist()       | helper for terrain distance |
+
 
 ### Terrain Distance
 To this point, distances between vertices have been discussed as though in 2d Euclidean space, but in actuality there is terrain between points. We compute distance over terrain by estimating the arc length over the terrain. Given a raster file and a step length, the algorithm samples along the vector from p to q and then computes distances from the sampling step length and the difference in elevation.
